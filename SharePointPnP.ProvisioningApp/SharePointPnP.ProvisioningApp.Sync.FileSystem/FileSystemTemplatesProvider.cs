@@ -44,6 +44,8 @@ namespace SharePointPnP.ProvisioningApp.Sync.FileSystem
 
         private async Task<IEnumerable<ITemplateItem>> GetAsync(DirectoryInfo directory)
         {
+            await Task.CompletedTask;
+
             var items = directory.EnumerateFileSystemInfos();
 
             return items.Select(b =>

@@ -27,6 +27,8 @@ namespace SharePointPnP.ProvisioningApp.Sync.GitHub
 
         public async Task CloneAsync(ITemplatesProvider sourceProvider, Action<string> log, string exclusionRules = null)
         {
+            await Task.CompletedTask;
+
             throw new NotSupportedException();
         }
 

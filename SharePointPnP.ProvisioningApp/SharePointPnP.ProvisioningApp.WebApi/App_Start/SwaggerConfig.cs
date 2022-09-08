@@ -12,8 +12,14 @@ using System.Linq;
 
 namespace SharePointPnP.ProvisioningApp.WebApi
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class SwaggerConfig
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public static void Register()
         {
             var thisAssembly = typeof(SwaggerConfig).Assembly;
@@ -257,6 +263,10 @@ namespace SharePointPnP.ProvisioningApp.WebApi
                     });
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         protected static string GetXmlCommentsPath()
         {
             return System.String.Format(@"{0}\bin\SharePointPnP.ProvisioningApp.WebApi.xml", System.AppDomain.CurrentDomain.BaseDirectory);

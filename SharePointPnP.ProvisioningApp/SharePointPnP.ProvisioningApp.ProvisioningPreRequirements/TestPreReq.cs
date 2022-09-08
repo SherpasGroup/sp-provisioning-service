@@ -18,6 +18,8 @@ namespace SharePointPnP.ProvisioningApp.ProvisioningPreRequirements
 
         public async Task<bool> Validate(CanProvisionModel canProvisionModel, string jsonConfiguration = null)
         {
+            await Task.CompletedTask;
+
             return false;
         }
     }

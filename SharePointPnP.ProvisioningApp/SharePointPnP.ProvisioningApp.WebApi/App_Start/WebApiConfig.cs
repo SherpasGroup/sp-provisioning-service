@@ -2,9 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 //
-using System;
-using System.Collections.Generic;
-using System.Linq;
+
 using System.Web.Http;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
@@ -12,8 +10,15 @@ using SharePointPnP.ProvisioningApp.DomainModel;
 
 namespace SharePointPnP.ProvisioningApp.WebApi
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public static class WebApiConfig
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="config"></param>
         public static void Register(HttpConfiguration config)
         {
             // Web API configuration and services

@@ -16,9 +16,6 @@ using SharePointPnP.ProvisioningApp.WebApi.Components;
 using System.Configuration;
 using SharePointPnP.ProvisioningApp.Infrastructure;
 using SharePointPnP.ProvisioningApp.Infrastructure.DomainModel.Provisioning;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.Azure;
-using Microsoft.WindowsAzure.Storage.Queue;
 using PnP.Framework.Provisioning.CanProvisionRules;
 using TenantAdmin = Microsoft.Online.SharePoint.TenantAdministration;
 using PnP.Framework.Provisioning.Model;
@@ -579,6 +576,10 @@ namespace SharePointPnP.ProvisioningApp.WebApi.Controllers
             return accessTokens;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             dbContext.Dispose();

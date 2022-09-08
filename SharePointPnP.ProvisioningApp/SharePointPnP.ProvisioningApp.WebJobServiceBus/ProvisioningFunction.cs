@@ -416,10 +416,12 @@ namespace SharePointPnP.ProvisioningApp.WebJobServiceBus
 
                                             // Apply the hierarchy
                                             logger.LogInformationWithPnPCorrelation("Hierarchy Provisioning Started: {ProvisioningStartDateTime}", action.CorrelationId, DateTime.Now.ToString("hh.mm.ss"));
-                                            tenant.ApplyProvisionHierarchy(hierarchy,
-                                                (hierarchy.Sequences != null && hierarchy.Sequences.Count > 0) ?
-                                                hierarchy.Sequences[0].ID : null,
-                                                ptai);
+
+                                            tenant
+                                                .ApplyProvisionHierarchy(
+                                                    hierarchy,
+                                                    (hierarchy.Sequences != null && hierarchy.Sequences.Count > 0) ? hierarchy.Sequences[0].ID : null,
+                                                    ptai);
                                             logger.LogInformationWithPnPCorrelation("Hierarchy Provisioning Completed: {ProvisioningEndDateTime}", action.CorrelationId, DateTime.Now.ToString("hh.mm.ss"));
                                         }
 

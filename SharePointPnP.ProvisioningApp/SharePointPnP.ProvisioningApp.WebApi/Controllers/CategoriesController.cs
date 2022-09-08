@@ -3,10 +3,7 @@
 // Licensed under the MIT license.
 //
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Web.Http;
 using Microsoft.AspNet.OData;
 using SharePointPnP.ProvisioningApp.DomainModel;
@@ -14,11 +11,18 @@ using SharePointPnP.ProvisioningApp.WebApi.Components;
 
 namespace SharePointPnP.ProvisioningApp.WebApi.Controllers
 {
+    /// <summary>
+    /// 
+    /// </summary>
     [Authorize]
     public class CategoriesController : ODataController
     {
         readonly ProvisioningAppDBContext dbContext = new ProvisioningAppDBContext();
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         [EnableQuery]
         public IQueryable<Category> Get()
         {
@@ -28,6 +32,11 @@ namespace SharePointPnP.ProvisioningApp.WebApi.Controllers
             return dbContext.Categories;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         [EnableQuery]
         public SingleResult<Category> Get([FromODataUri] String key)
         {
@@ -38,6 +47,10 @@ namespace SharePointPnP.ProvisioningApp.WebApi.Controllers
             return SingleResult.Create(result);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             dbContext.Dispose();

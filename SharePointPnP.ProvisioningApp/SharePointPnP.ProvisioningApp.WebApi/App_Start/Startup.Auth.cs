@@ -2,11 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 //
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Web;
+
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Owin.Security.ActiveDirectory;
 using Owin;
@@ -14,8 +10,15 @@ using SharePointPnP.ProvisioningApp.Infrastructure.Security;
 
 namespace SharePointPnP.ProvisioningApp.WebApi
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public partial class Startup
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="app"></param>
         public void ConfigureAuth(IAppBuilder app)
         {
             app.UseWindowsAzureActiveDirectoryBearerAuthentication(
