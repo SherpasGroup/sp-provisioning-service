@@ -10,7 +10,6 @@ using System.Data.Entity.Infrastructure;
 using System.Data.Entity;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using PnP.Framework.Provisioning.Providers.Xml;
 using System.Xml.Linq;
@@ -20,7 +19,6 @@ using PnP.Framework.Provisioning.Connectors;
 using PnP.Framework.Provisioning.Model;
 using HtmlAgilityPack;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using SharePointPnP.ProvisioningApp.Infrastructure;
 
 namespace SharePointPnP.ProvisioningApp.Synchronization
