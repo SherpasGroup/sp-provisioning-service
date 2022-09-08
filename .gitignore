@@ -179,11 +179,11 @@ UpgradeLog*.htm
 FakesAssemblies/
 
 # App.Config files and Web.Config files
-[Aa]pp.[Cc]onfig
-[Aa]pp-*.[Cc]onfig
-[Ww]eb.[Cc]onfig
-Web.*.[Cc]onfig
-local.settings.json
+# [Aa]pp.[Cc]onfig
+# [Aa]pp-*.[Cc]onfig
+# [Ww]eb.[Cc]onfig
+# Web.*.[Cc]onfig
+# local.settings.json
 
 # Visual Studio 2015 cache/options directory
 .vs/
