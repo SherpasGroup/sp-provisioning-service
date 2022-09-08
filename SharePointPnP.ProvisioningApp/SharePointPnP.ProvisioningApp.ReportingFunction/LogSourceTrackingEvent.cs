@@ -2,13 +2,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 //
-using System.Linq;
+
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Azure.WebJobs.Host;
 using System.Configuration;
 using System;
 using Newtonsoft.Json;
@@ -17,12 +16,14 @@ using System.Data;
 
 namespace SharePointPnP.ProvisioningApp.ReportingFunction
 {
+    using Microsoft.Extensions.Logging;
+
     public static class LogSourceTrackingEvent
     {
         [FunctionName("LogSourceTrackingEvent")]
-        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)]HttpRequestMessage req, TraceWriter log)
+        public static async Task<HttpResponseMessage> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)]HttpRequestMessage req, ILogger log)
         {
-            log.Info("Source Tracking function triggered.");
+            log.LogInformation("Source Tracking function triggered.");
 
             Exception exception = null;
 
