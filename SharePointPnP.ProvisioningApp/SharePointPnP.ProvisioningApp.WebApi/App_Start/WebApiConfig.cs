@@ -42,10 +42,9 @@ namespace SharePointPnP.ProvisioningApp.WebApi
             var categories = builder.EntityType<Category>();
             categories.Count().Filter().Select().OrderBy();
 
-            config.MapODataServiceRoute(
-                routeName: "odata",
-                routePrefix: "odata",
-                model: builder.GetEdmModel());
+            var edmModel = builder.GetEdmModel();
+
+            config.MapODataServiceRoute(routeName: "odata", routePrefix: "odata", model: edmModel);
         }
     }
 }
