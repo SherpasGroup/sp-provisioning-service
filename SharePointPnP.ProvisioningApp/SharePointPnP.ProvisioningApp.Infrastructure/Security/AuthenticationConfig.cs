@@ -18,25 +18,29 @@ namespace SharePointPnP.ProvisioningApp.Infrastructure.Security
         public const string BasicSignInScopes = "openid profile email offline_access";
         public const string NameClaimType = "name";
 
+        private static readonly string SppaProvisioningScope = ConfigurationManager.AppSettings["SPPA:ProvisioningScope"];
+
         /// <summary>
         /// The Client ID is used by the application to uniquely identify itself to Azure AD.
         /// </summary>
-        public static string ClientId { get; } = ConfigurationManager.AppSettings[$"{ConfigurationManager.AppSettings["SPPA:ProvisioningScope"]}:ClientId"];
+        public static string ClientId { get; } = ConfigurationManager.AppSettings[$"{SppaProvisioningScope}:ClientId"];
 
         /// <summary>
         /// The ClientSecret is a credential used to authenticate the application to Azure AD.  Azure AD supports password and certificate credentials.
         /// </summary>
-        public static string ClientSecret { get; } = ConfigurationManager.AppSettings[$"{ConfigurationManager.AppSettings["SPPA:ProvisioningScope"]}:ClientSecret"];
+        public static string ClientSecret { get; } = ConfigurationManager.AppSettings[$"{SppaProvisioningScope}:ClientSecret"];
 
         /// <summary>
         /// The Redirect Uri is the URL where the user will be redirected after they sign in.
         /// </summary>
-        public static string RedirectUri { get; } = ConfigurationManager.AppSettings[$"{ConfigurationManager.AppSettings["SPPA:ProvisioningScope"]}:AppUrl"];
+        public static string RedirectUri { get; } = ConfigurationManager.AppSettings[$"{SppaProvisioningScope}:AppUrl"];
 
         /// <summary>
         /// The AAD Instance for Azure Active Directory authentication
         /// </summary>
         public static string AADInstance { get; } = ConfigurationManager.AppSettings["ida:AADInstance"];
+
+        // public static string AADDomain { get; } = ConfigurationManager.AppSettings["ida:AADDomain"];
 
         /// <summary>
         /// The API Audience for API Authentication
@@ -56,12 +60,12 @@ namespace SharePointPnP.ProvisioningApp.Infrastructure.Security
         /// <summary>
         /// String with list of Microsoft Graph permission scopes
         /// </summary>
-        public static string GraphScopes { get; } = ConfigurationManager.AppSettings[$"{ConfigurationManager.AppSettings["SPPA:ProvisioningScope"]}:GraphScopes"];
+        public static string GraphScopes { get; } = ConfigurationManager.AppSettings[$"{SppaProvisioningScope}:GraphScopes"];
 
         /// <summary>
         /// String with list of SharePoint Online permission scopes
         /// </summary>
-        public static string SPOScopes { get; } = ConfigurationManager.AppSettings[$"{ConfigurationManager.AppSettings["SPPA:ProvisioningScope"]}:SpoScopes"];
+        public static string SPOScopes { get; } = ConfigurationManager.AppSettings[$"{SppaProvisioningScope}:SpoScopes"];
 
         public static string[] GetGraphScopes()
         {
