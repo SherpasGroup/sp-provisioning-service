@@ -23,7 +23,6 @@ using System.Configuration;
 using System.Data.Entity;
 using System.IO;
 using System.Linq;
-using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -42,7 +41,7 @@ namespace SharePointPnP.ProvisioningApp.WebApp.Controllers
         /// <param name="returnUrl">The optional return URL after login</param>
         /// <returns></returns>
         [HttpGet]
-        public ActionResult Login(String returnUrl = null)
+        public ActionResult Login(string returnUrl = null)
         {
             return Redirect(returnUrl ?? "/");
         }
@@ -844,9 +843,9 @@ namespace SharePointPnP.ProvisioningApp.WebApp.Controllers
                 {
                     model.ProvisioningPreRequirements = metadataProperties
                         .preRequirements
-                        .Select(i => new ProvisioningPreRequirement 
-                        { 
-                            AssemblyName = i.assemblyName, 
+                        .Select(i => new ProvisioningPreRequirement
+                        {
+                            AssemblyName = i.assemblyName,
                             TypeName = i.typeName,
                             Configuration = i.configuration,
                             PreRequirementContent = context.ContentPages.FirstOrDefault(cp => cp.Id == i.preRequirementContent)?.Content

@@ -2,11 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 //
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
+
 using System.Web.Http;
 
 namespace SharePointPnP.ProvisioningApp.WebApp.Controllers
@@ -16,9 +12,9 @@ namespace SharePointPnP.ProvisioningApp.WebApp.Controllers
     {
         [HttpGet()]
         [Route("UserProfile/Username")]
-        public String GetUserName()
+        public string GetUserName()
         {
-            String result = String.Empty;
+            var result = string.Empty;
 
             if (System.Threading.Thread.CurrentPrincipal != null &&
                 System.Threading.Thread.CurrentPrincipal.Identity != null &&
@@ -27,7 +23,7 @@ namespace SharePointPnP.ProvisioningApp.WebApp.Controllers
                 result = System.Threading.Thread.CurrentPrincipal.Identity.Name;
             }
 
-            return (result);
+            return result;
         }
     }
 }

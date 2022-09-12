@@ -8,14 +8,10 @@ using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.TokenCacheProviders.Distributed;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
 using System.Net.Http;
 using System.Security;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SharePointPnP.ProvisioningApp.Infrastructure.Security
@@ -23,21 +19,21 @@ namespace SharePointPnP.ProvisioningApp.Infrastructure.Security
     public class AccessTokenProvider : IAccessTokenProvider
     {
         private static string aadInstance = EnsureTrailingSlash(AuthenticationConfig.AADInstance);
-        
+
         private const string Oid = "oid";
         private const string Tid = "tid";
         private const string ObjectId = "http://schemas.microsoft.com/identity/claims/objectidentifier";
         private const string TenantId = "http://schemas.microsoft.com/identity/claims/tenantid";
 
         // We keep global client app
-        private static Lazy<IConfidentialClientApplication> lazyClientApp = new Lazy<IConfidentialClientApplication>(() => { 
-            
+        private static Lazy<IConfidentialClientApplication> lazyClientApp = new Lazy<IConfidentialClientApplication>(() =>
+        {
             var result = ConfidentialClientApplicationBuilder
-                .Create(AuthenticationConfig.ClientId)
-                .WithClientSecret(AuthenticationConfig.ClientSecret)
-                .WithRedirectUri(AuthenticationConfig.RedirectUri)
-                .WithAuthority(AadAuthorityAudience.AzureAdMultipleOrgs, false)
-                .Build();
+                            .Create(AuthenticationConfig.ClientId)
+                            .WithClientSecret(AuthenticationConfig.ClientSecret)
+                            .WithRedirectUri(AuthenticationConfig.RedirectUri)
+                            .WithAuthority(AadAuthorityAudience.AzureAdMultipleOrgs, false)
+                            .Build();
 
             // After the ConfidentialClientApplication is created, we overwrite its default UserTokenCache serialization with our implementation
             // clientapp.AddInMemoryTokenCache();
@@ -52,7 +48,7 @@ namespace SharePointPnP.ProvisioningApp.Infrastructure.Security
             });
 
             return result;
-        }, 
+        },
             true);
 
         private static string EnsureTrailingSlash(string value)
