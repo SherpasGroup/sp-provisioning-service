@@ -7,7 +7,6 @@ using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OpenIdConnect;
 using Owin;
-using System;
 using System.Configuration;
 using System.Threading.Tasks;
 using System.Web;
@@ -16,6 +15,8 @@ using System.Web.Mvc;
 using SharePointPnP.ProvisioningApp.WebApp.Controllers;
 using SharePointPnP.ProvisioningApp.Infrastructure.Security;
 using SharePointPnP.ProvisioningApp.WebApp.Utils;
+using Microsoft.IdentityModel.Logging;
+using Microsoft.Owin;
 
 namespace SharePointPnP.ProvisioningApp.WebApp
 {
@@ -23,13 +24,21 @@ namespace SharePointPnP.ProvisioningApp.WebApp
     {
         public void ConfigureAuth(IAppBuilder app)
         {
+            IdentityModelEventSource.ShowPII = true; //Add this line
+
             app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
 
-            String provisioningScope = ConfigurationManager.AppSettings["SPPA:ProvisioningScope"];
-            String provisioningEnvironment = ConfigurationManager.AppSettings["SPPA:ProvisioningEnvironment"];
+            var provisioningScope = ConfigurationManager.AppSettings["SPPA:ProvisioningScope"];
+            var provisioningEnvironment = ConfigurationManager.AppSettings["SPPA:ProvisioningEnvironment"];
 
-             app.UseCookieAuthentication(new CookieAuthenticationOptions {
-                CookiePath = $"/{provisioningScope}" ?? "/"
+            app.UseCookieAuthentication(new CookieAuthenticationOptions
+            {
+                // AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
+                // LoginPath = new PathString("/Home/Login"),
+                // Provider = new CookieAuthenticationProvider { OnResponseSignIn = OnResponseSignIn },
+                // CookieDomain = "",
+                // CookieName = "cookieName",
+                CookiePath = $"/{provisioningScope}"
             });
 
             app.UseOAuth2CodeRedeemer(
@@ -43,6 +52,8 @@ namespace SharePointPnP.ProvisioningApp.WebApp
             app.UseOpenIdConnectAuthentication(
                 new OpenIdConnectAuthenticationOptions
                 {
+                    // RequireHttpsMetadata = false,
+
                     Authority = AuthenticationConfig.Authority,
                     ClientId = AuthenticationConfig.ClientId,
                     RedirectUri = AuthenticationConfig.RedirectUri,
@@ -86,6 +97,20 @@ namespace SharePointPnP.ProvisioningApp.WebApp
                         }
                     }
                 });
+        }
+
+        private void OnResponseSignIn(CookieResponseSignInContext context)
+        {
+            var debug = false;
+            if (debug)
+            {
+                //set cookie domain
+                context.Options.CookieDomain = context.OwinContext.Request.Uri.Host;
+
+                //context.Options.CookieDomain ="www.website.com";
+                //set cookie path
+                context.Options.CookiePath = "/Business";
+            }
         }
     }
 }
