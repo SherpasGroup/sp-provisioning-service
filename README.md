@@ -4,7 +4,15 @@ Code for the provisioning service hosted at https://lookbook.microsoft.com/.
 
 All the **SharePoint Look Book templates** hosted from this service are also open-sourced and are available from seperate [repository](https://github.com/SharePoint/sp-dev-provisioning-templates), which is the content source for the release information.
 
+## Documentation
 > Please be aware that **documentation work is still in progress** and we will keep on provide more guidance and input around covered capabilities in this solution. In the meantime, please submit issues and questions using the [issues list](../../issues) to help us provide better documentation and guidance. Thanks for your patience!
+
+### Links
+* https://github.com/SharePoint/sp-dev-docs/blob/main/docs/solution-guidance/Introducing-the-PnP-Provisioning-Engine.md
+* https://github.com/SharePoint/sp-dev-docs/blob/main/docs/solution-guidance/configuring-the-pnp-provisioning-engine.md
+* https://github.com/SharePoint/sp-dev-docs/blob/main/docs/solution-guidance/pnp-provisioning-engine-and-the-core-library.md
+* https://github.com/SharePoint/sp-dev-docs/blob/main/docs/solution-guidance/pnp-provisioning-framework.md
+* https://github.com/SharePoint/sp-dev-docs/tree/main/docs/solution-guidance
 
 ![PnP Provisioning Service Front Page](./assets/frontpage.png)
 
