@@ -1,7 +1,6 @@
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -10,6 +9,7 @@ using SharePoint.Portal.Web.Data;
 using SharePoint.Portal.Web.Middleware.PortalApiExceptionHandler;
 using SharePoint.Portal.Web.Telemetry;
 using SharePoint.Portal.Web.Business.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace SharePoint.Portal.Web
 {
@@ -17,9 +17,9 @@ namespace SharePoint.Portal.Web
     {
         public IConfiguration Configuration { get; }
 
-        public IHostingEnvironment Environment { get; }
+        public IHostEnvironment Environment { get; }
 
-        public Startup(IConfiguration configuration, IHostingEnvironment environment)
+        public Startup(IConfiguration configuration, IHostEnvironment environment)
         {
             Configuration = configuration;
             Environment = environment;
@@ -30,8 +30,7 @@ namespace SharePoint.Portal.Web
         {
             if (Environment.IsProduction())
             {
-                services.AddDbContext<PortalDbContext>(options =>
-                    options.UseSqlServer(Configuration.GetConnectionString("PnPProvisioningAppDBContext")));
+                services.AddDbContext<PortalDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("PnPProvisioningAppDBContext")));
             }
             else
             {
@@ -66,8 +65,11 @@ namespace SharePoint.Portal.Web
                 services.AddApplicationInsightsTelemetryProcessor<SockJsFilterTelemetryProcessor>();
             }
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
-                .AddJsonOptions(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+            services
+                .AddMvc()
+                // .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+                // .AddJsonOptions(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore)
+                ;
 
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
@@ -77,7 +79,7 @@ namespace SharePoint.Portal.Web
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, PortalDbContext dbContext)
+        public void Configure(IApplicationBuilder app, IHostEnvironment env, PortalDbContext dbContext)
         {
             if (env.IsDevelopment())
             {
