@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 //
-using Microsoft.Identity.Client;
+
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OpenIdConnect;
@@ -16,7 +16,7 @@ using SharePointPnP.ProvisioningApp.WebApp.Controllers;
 using SharePointPnP.ProvisioningApp.Infrastructure.Security;
 using SharePointPnP.ProvisioningApp.WebApp.Utils;
 using Microsoft.IdentityModel.Logging;
-using Microsoft.Owin;
+using System.Net;
 
 namespace SharePointPnP.ProvisioningApp.WebApp
 {
@@ -24,6 +24,9 @@ namespace SharePointPnP.ProvisioningApp.WebApp
     {
         public void ConfigureAuth(IAppBuilder app)
         {
+            // https://stackoverflow.com/questions/73110391/idx10803-unable-to-create-to-obtain-configuration-from-https-login-microsof
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+
             IdentityModelEventSource.ShowPII = true; //Add this line
 
             app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
@@ -33,12 +36,16 @@ namespace SharePointPnP.ProvisioningApp.WebApp
 
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
-                // AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
+                // AuthenticationType = "Cookies", // DefaultAuthenticationTypes.ApplicationCookie,
                 // LoginPath = new PathString("/Home/Login"),
                 // Provider = new CookieAuthenticationProvider { OnResponseSignIn = OnResponseSignIn },
                 // CookieDomain = "",
-                // CookieName = "cookieName",
-                CookiePath = $"/{provisioningScope}"
+                // CookieName = "ourCookieName",
+                CookiePath = $"/{provisioningScope}",
+                // CookiePath = $"/",
+
+                // CookieManager = new SystemWebCookieManager()    // <-- new
+                // CookieManager = new SystemWebChunkingCookieManager(),   // <-- new
             });
 
             app.UseOAuth2CodeRedeemer(
@@ -59,6 +66,14 @@ namespace SharePointPnP.ProvisioningApp.WebApp
                     RedirectUri = AuthenticationConfig.RedirectUri,
                     PostLogoutRedirectUri = AuthenticationConfig.RedirectUri,
                     Scope = $"{AuthenticationConfig.BasicSignInScopes} {AuthenticationConfig.GraphScopes}",
+
+                    // ResponseType = "code id_token",
+                    // SignInAsAuthenticationType = "cookie",
+                    // SignInAsAuthenticationType = "Cookies",
+                    // UseTokenLifetime = false,
+                    // ClientSecret = "secret",
+
+
                     TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
                     {
                         // instead of using the default validation (validating against a single issuer value, as we do in line of business apps), 
@@ -71,11 +86,42 @@ namespace SharePointPnP.ProvisioningApp.WebApp
                         //{
                         //    return Task.FromResult(0);
                         //},
+                        RedirectToIdentityProvider = async n =>
+                        {   // https://www.scottbrady91.com/aspnet/refreshing-your-legacy-aspnet-identityserver-client-applications
+
+                            await Task.CompletedTask;
+
+                            /*
+                            if (n.ProtocolMessage.RequestType == OpenIdConnectRequestType.Authentication)
+                            {
+                                // generate code verifier and code challenge
+                                var codeVerifier = CryptoRandom.CreateUniqueId(32);
+
+                                string codeChallenge;
+                                using (var sha256 = SHA256.Create())
+                                {
+                                    var challengeBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
+                                    codeChallenge = Base64Url.Encode(challengeBytes);
+                                }
+
+                                // set code_challenge parameter on authorization request
+                                n.ProtocolMessage.SetParameter("code_challenge", codeChallenge);
+                                n.ProtocolMessage.SetParameter("code_challenge_method", "S256");
+
+                                // remember code verifier in cookie (adapted from OWIN nonce cookie)
+                                // see: https://github.com/scottbrady91/Blog-Example-Classes/blob/master/AspNetFrameworkPkce/ScottBrady91.BlogExampleCode.AspNetPkce/Startup.cs#L85
+                                // RememberCodeVerifier(n, codeVerifier);
+                            }
+                            */
+                        },
                         AuthorizationCodeReceived = async (context) =>
                         {
                             // Upon successful sign in, get the access token & cache it using MSAL
-                            IConfidentialClientApplication clientApp = MsalAppBuilder.BuildConfidentialClientApplication();
-                            AuthenticationResult result = await clientApp.AcquireTokenByAuthorizationCode(AuthenticationConfig.GetGraphScopes(), context.Code).ExecuteAsync();
+                            var clientApp = MsalAppBuilder.BuildConfidentialClientApplication();
+                            var result = await clientApp
+                                                .AcquireTokenByAuthorizationCode(AuthenticationConfig.GetGraphScopes(), context.Code)
+                                                .ExecuteAsync();
+
                         },
                         AuthenticationFailed = (context) =>
                         {

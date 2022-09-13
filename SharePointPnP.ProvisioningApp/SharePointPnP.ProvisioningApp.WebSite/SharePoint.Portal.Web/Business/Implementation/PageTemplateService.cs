@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using SharePoint.Portal.Web.Data;
 using SharePoint.Portal.Web.Models;
 
@@ -16,9 +13,11 @@ namespace SharePoint.Portal.Web.Business.Implementation
             DbContext = dbContext;
         }
 
-        public Task<PageTemplate> GetPageTemplate(string id)
+        public async Task<PageTemplate> GetPageTemplate(string id)
         {
-            return DbContext.PageTemplates.FindAsync(id);
+            return await DbContext
+                            .PageTemplates
+                            .FindAsync(id);
         }
     }
 }

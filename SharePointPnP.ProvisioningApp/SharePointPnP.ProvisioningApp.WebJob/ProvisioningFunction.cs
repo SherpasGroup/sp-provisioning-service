@@ -3,7 +3,6 @@
 // Licensed under the MIT license.
 //
 using Microsoft.Azure.WebJobs;
-using Microsoft.Online.SharePoint.TenantAdministration;
 using Microsoft.SharePoint.Client;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -26,9 +25,6 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Mail;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -447,6 +443,9 @@ namespace SharePointPnP.ProvisioningApp.WebJob
                                                 (hierarchy.Sequences != null && hierarchy.Sequences.Count > 0) ?
                                                 hierarchy.Sequences[0].ID : null,
                                                 ptai);
+
+                                            // tenant.ApplyTenantTemplate();
+
                                             log.WriteLine($"Hierarchy Provisioning Completed: {DateTime.Now:hh.mm.ss}");
                                         }
 

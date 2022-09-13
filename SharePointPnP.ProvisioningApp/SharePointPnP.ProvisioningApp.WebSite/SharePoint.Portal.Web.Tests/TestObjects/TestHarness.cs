@@ -4,7 +4,6 @@ using SharePoint.Portal.Web.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace SharePoint.Portal.Web.Tests
 {
@@ -30,8 +29,8 @@ namespace SharePoint.Portal.Web.Tests
             get
             {
                 return new DbContextOptionsBuilder<PortalDbContext>()
-                   .UseSqlite(Connection)
-                   .Options;
+                           .UseSqlite(Connection)
+                           .Options;
             }
         }
 
@@ -67,7 +66,12 @@ namespace SharePoint.Portal.Web.Tests
             }
         }
 
-        public static Models.Package CreatePackageModel(Guid? id = null, bool preview = false, bool isVisible = true, List<string> platformIds = null, Models.UI.MetaData metaData = null)
+        public static Models.Package CreatePackageModel(
+                        Guid? id = null,
+                        bool preview = false,
+                        bool isVisible = true,
+                        List<string> platformIds = null,
+                        Models.UI.MetaData metaData = null)
         {
             if (!id.HasValue)
             {

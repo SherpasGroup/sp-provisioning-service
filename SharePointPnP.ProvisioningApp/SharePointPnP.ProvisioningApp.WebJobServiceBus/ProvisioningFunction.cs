@@ -4,7 +4,6 @@
 //
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
-using Microsoft.Online.SharePoint.TenantAdministration;
 using Microsoft.SharePoint.Client;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -27,9 +26,6 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Mail;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -37,14 +33,14 @@ namespace SharePointPnP.ProvisioningApp.WebJobServiceBus
 {
     public static class ProvisioningFunction
     {
-        private static KnownExceptions knownExceptions;
+        private static readonly KnownExceptions KnownExceptions;
 
         static ProvisioningFunction()
         {
             // Get the JSON settings for known exceptions
-            Stream stream = typeof(KnownExceptions)
-                .Assembly
-                .GetManifestResourceStream("SharePointPnP.ProvisioningApp.WebJobServiceBus.known-exceptions.json");
+            var stream = typeof(KnownExceptions)
+                            .Assembly
+                            .GetManifestResourceStream("SharePointPnP.ProvisioningApp.WebJobServiceBus.known-exceptions.json");
 
             // If we have the stream and it can be read
             if (stream != null && stream.CanRead)
@@ -52,24 +48,26 @@ namespace SharePointPnP.ProvisioningApp.WebJobServiceBus
                 using (var sr = new StreamReader(stream))
                 {
                     // Deserialize it
-                    knownExceptions = JsonConvert.DeserializeObject<KnownExceptions>(sr.ReadToEnd());
+                    KnownExceptions = JsonConvert.DeserializeObject<KnownExceptions>(sr.ReadToEnd());
                 }
             }
         }
 
-        public static async Task RunAsync([ServiceBusTrigger("actions", IsSessionsEnabled = false)]ProvisioningActionModel action, ILogger logger)
+        public static async Task RunAsync([ServiceBusTrigger("actions", IsSessionsEnabled = false)] ProvisioningActionModel action, ILogger logger)
         {
             var startProvisioning = DateTime.Now;
 
-            String provisioningEnvironment = ConfigurationManager.AppSettings["SPPA:ProvisioningEnvironment"];
+            var provisioningEnvironment = ConfigurationManager.AppSettings["SPPA:ProvisioningEnvironment"];
 
             logger.LogInformationWithPnPCorrelation("Processing queue trigger function for tenant {TenantId}", action.CorrelationId, action.TenantId);
 
             // Instantiate and use the telemetry model
-            TelemetryUtility telemetry = new TelemetryUtility((s) => {
+            TelemetryUtility telemetry = new TelemetryUtility((s) =>
+            {
                 logger.LogInformationWithPnPCorrelation(s, action.CorrelationId);
             });
-            Dictionary<string, string> telemetryProperties = new Dictionary<string, string>();
+
+            var telemetryProperties = new Dictionary<string, string>();
 
             // Configure telemetry properties
             // telemetryProperties.Add("UserPrincipalName", action.UserPrincipalName);
@@ -99,7 +97,7 @@ namespace SharePointPnP.ProvisioningApp.WebJobServiceBus
 
                 // Retrieve the SPO target tenant via Microsoft Graph
                 logger.LogInformationWithPnPCorrelation("Retrieving target Microsoft Graph Access Token.", action.CorrelationId);
-                var graphAccessToken = 
+                var graphAccessToken =
                     action.AccessTokens.ContainsKey("graph.microsoft.com") ?
                     action.AccessTokens["graph.microsoft.com"] : null;
 
@@ -282,7 +280,7 @@ namespace SharePointPnP.ProvisioningApp.WebJobServiceBus
                                 if (string.IsNullOrEmpty(spoAdminAccessToken))
                                 {
                                     throw new ApplicationException($"Failed to retrieve target SharePoint Online Admin Center Access Token for {spoAdminAuthority}.");
-                                }    
+                                }
 
                                 logger.LogInformationWithPnPCorrelation($"Retrieved target SharePoint Online Admin Center Access Token for {spoAdminAuthority}.", action.CorrelationId);
 
@@ -350,17 +348,17 @@ namespace SharePointPnP.ProvisioningApp.WebJobServiceBus
                                         {
                                             foreach (var key in action.PackageProperties.Keys)
                                             {
-                                                if (hierarchy.Parameters.ContainsKey(key.ToString()))
+                                                if (hierarchy.Parameters.ContainsKey(key))
                                                 {
-                                                    hierarchy.Parameters[key.ToString()] = action.PackageProperties[key].ToString();
+                                                    hierarchy.Parameters[key] = action.PackageProperties[key];
                                                 }
                                                 else
                                                 {
-                                                    hierarchy.Parameters.Add(key.ToString(), action.PackageProperties[key].ToString());
+                                                    hierarchy.Parameters.Add(key, action.PackageProperties[key]);
                                                 }
 
                                                 // Configure telemetry properties
-                                                telemetryProperties.Add($"PackageProperty.{key}", action.PackageProperties[key].ToString());
+                                                telemetryProperties.Add($"PackageProperty.{key}", action.PackageProperties[key]);
                                             }
                                         }
 
@@ -518,10 +516,10 @@ namespace SharePointPnP.ProvisioningApp.WebJobServiceBus
                             }
                             else
                             {
-                                throw new ApplicationException($"The requested package does not contain a valid PnP Hierarchy!");
+                                throw new ApplicationException("The requested package does not contain a valid PnP Hierarchy!");
                             }
 
-#endregion
+                            #endregion
                         }
                         else
                         {
@@ -649,14 +647,14 @@ namespace SharePointPnP.ProvisioningApp.WebJobServiceBus
 
                     var httpClient = new HttpClient();
 
-                    WebhookSender.InvokeWebhook(provisioningWebhook, httpClient, 
+                    WebhookSender.InvokeWebhook(provisioningWebhook, httpClient,
                         ProvisioningTemplateWebhookKind.ExceptionOccurred,
                         exception: ex);
                 }
             }
         }
 
-        private static void AddProvisioningTemplateWebhook(ProvisioningTemplate template, 
+        private static void AddProvisioningTemplateWebhook(ProvisioningTemplate template,
             Infrastructure.DomainModel.Provisioning.ProvisioningWebhook webhook, ProvisioningTemplateWebhookKind kind)
         {
             template.ProvisioningTemplateWebhooks.Add(new ProvisioningTemplateWebhook
@@ -761,18 +759,19 @@ namespace SharePointPnP.ProvisioningApp.WebJobServiceBus
 
         private static String SimplifyException(Exception ex)
         {
-            var knownException = knownExceptions?.Exceptions?.Find(e => ex.GetType().FullName == e.ExceptionType && ex.StackTrace.Contains(e.MatchingText));
+            var knownException = KnownExceptions?.Exceptions?.Find(e => ex.GetType().FullName == e.ExceptionType && ex.StackTrace.Contains(e.MatchingText));
 
             if (knownException != null)
             {
                 var tmp = typeof(FriendlyErrorMessages).GetProperties(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
 
-                return (typeof(FriendlyErrorMessages).GetProperty(knownException.FriendlyMessageResourceKey,
-                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)?.GetValue(null, null) as String);
+                return typeof(FriendlyErrorMessages)
+                        .GetProperty(knownException.FriendlyMessageResourceKey, System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+                        ?.GetValue(null, null) as string;
             }
             else
             {
-                return (ex.Message);
+                return ex.Message;
                 //return (ex.ToDetailedString());
             }
         }
@@ -795,8 +794,7 @@ namespace SharePointPnP.ProvisioningApp.WebJobServiceBus
             try
             {
                 // Make the Azure Function call for reporting
-                HttpHelper.MakePostRequest(ConfigurationManager.AppSettings["SPPA:ReportingFunctionUrl"],
-                    provisioningEvent, "application/json", null);
+                HttpHelper.MakePostRequest(ConfigurationManager.AppSettings["SPPA:ReportingFunctionUrl"], provisioningEvent, "application/json", null);
             }
             catch
             {
@@ -841,8 +839,7 @@ namespace SharePointPnP.ProvisioningApp.WebJobServiceBus
             try
             {
                 // Make the Azure Function call for reporting
-                HttpHelper.MakePostRequest(ConfigurationManager.AppSettings["SPPA:SourceTrackingFunctionUrl"],
-                    sourceTrackingEvent, "application/json", null);
+                HttpHelper.MakePostRequest(ConfigurationManager.AppSettings["SPPA:SourceTrackingFunctionUrl"], sourceTrackingEvent, "application/json", null);
             }
             catch
             {

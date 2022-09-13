@@ -69,16 +69,20 @@ namespace SharePointPnP.ProvisioningApp.Infrastructure.Security
 
         public static string[] GetGraphScopes()
         {
-            return (from s in GraphScopes.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries)
-                    select $"{GraphBaseUrl}{s}").ToArray();
+            var graphScopes = GraphScopes.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+            return (from s in graphScopes select $"{GraphBaseUrl}{s}")
+                    .ToArray();
         }
 
         public static string[] GetSpoScopes(string spoBaseUrl)
         {
             var spoUrl = spoBaseUrl.EndsWith("/") ? spoBaseUrl : $"{spoBaseUrl}/";
 
-            return (from s in SPOScopes.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries)
-                    select $"{spoUrl}{s}").ToArray();
+            var scopes = SPOScopes.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+            return (from s in scopes select $"{spoUrl}{s}")
+                    .ToArray();
         }
     }
 }
