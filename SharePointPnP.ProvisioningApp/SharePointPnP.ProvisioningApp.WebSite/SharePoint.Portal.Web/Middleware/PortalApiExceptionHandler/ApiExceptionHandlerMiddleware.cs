@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -14,6 +13,8 @@ using System.Threading.Tasks;
 
 namespace SharePoint.Portal.Web.Middleware.PortalApiExceptionHandler
 {
+    using Microsoft.Extensions.Hosting;
+
     public class ApiExceptionHandlerMiddleware
     {
         private readonly RequestDelegate next;
@@ -26,7 +27,7 @@ namespace SharePoint.Portal.Web.Middleware.PortalApiExceptionHandler
             RequestDelegate next,
             IOptions<ApiExceptionHandlerOptions> options,
             ILoggerFactory loggerFactory,
-            IHostingEnvironment hostingEnvironment)
+            IHostEnvironment hostingEnvironment)
         {
             this.next = next ?? throw new ArgumentNullException(nameof(next));
             this.options = options?.Value ?? throw new ArgumentException(nameof(options));

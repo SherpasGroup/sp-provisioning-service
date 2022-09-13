@@ -42,8 +42,8 @@ namespace SharePointPnP.ProvisioningApp.WebJob
         {
             // Get the JSON settings for known exceptions
             Stream stream = typeof(KnownExceptions)
-                .Assembly
-                .GetManifestResourceStream("SharePointPnP.ProvisioningApp.WebJob.known-exceptions.json");
+                            .Assembly
+                            .GetManifestResourceStream("SharePointPnP.ProvisioningApp.WebJob.known-exceptions.json");
 
             // If we have the stream and it can be read
             if (stream != null && stream.CanRead)
@@ -62,14 +62,14 @@ namespace SharePointPnP.ProvisioningApp.WebJob
 
             String provisioningEnvironment = ConfigurationManager.AppSettings["SPPA:ProvisioningEnvironment"];
 
-            log.WriteLine($"Processing queue trigger function for tenant {action.TenantId}");
-            log.WriteLine($"PnP Correlation ID: {action.CorrelationId.ToString()}");
+            await log.WriteLineAsync($"Processing queue trigger function for tenant {action.TenantId}");
+            await log.WriteLineAsync($"PnP Correlation ID: {action.CorrelationId.ToString()}");
 
             // Instantiate and use the telemetry model
-            TelemetryUtility telemetry = new TelemetryUtility((s) => {
+            var telemetry = new TelemetryUtility((s) => {
                 log.WriteLine(s);
             });
-            Dictionary<string, string> telemetryProperties = new Dictionary<string, string>();
+            var telemetryProperties = new Dictionary<string, string>();
 
             // Configure telemetry properties
             // telemetryProperties.Add("UserPrincipalName", action.UserPrincipalName);
@@ -94,14 +94,20 @@ namespace SharePointPnP.ProvisioningApp.WebJob
                 var tokenId = $"{action.TenantId}-{action.UserPrincipalName.ToLower().GetHashCode()}-{action.ActionType.ToString().ToLower()}-{provisioningEnvironment}";
 
                 // Retrieve the SPO target tenant via Microsoft Graph
-                var graphAccessToken = await ProvisioningAppManager.AccessTokenProvider.GetAccessTokenAsync(
-                    tokenId, "https://graph.microsoft.com/",
-                    ConfigurationManager.AppSettings[$"{action.ActionType}:ClientId"],
-                    ConfigurationManager.AppSettings[$"{action.ActionType}:ClientSecret"],
-                    ConfigurationManager.AppSettings[$"{action.ActionType}:AppUrl"]);
-                log.WriteLine($"Retrieved target Microsoft Graph Access Token.");
+                var graphAccessToken = await ProvisioningAppManager
+                                                .AccessTokenProvider
+                                                .GetAccessTokenAsync(
+                                                // .GetAppOnlyAccessTokenAsync(
+                                                    // tokenId,
+                                                    // "https://graph.microsoft.com/",
+                                                    ConfigurationManager.AppSettings[$"{action.ActionType}:ClientId"],
+                                                    ConfigurationManager.AppSettings[$"{action.ActionType}:ClientSecret"],
+                                                    ConfigurationManager.AppSettings[$"{action.ActionType}:AppUrl"],
+                                                    null);
 
-                if (!String.IsNullOrEmpty(graphAccessToken))
+                await log.WriteLineAsync("Retrieved target Microsoft Graph Access Token.");
+
+                if (!string.IsNullOrEmpty(graphAccessToken))
                 {
                     #region Get current context data (User, SPO Tenant, SPO Access Token)
 
@@ -128,24 +134,29 @@ namespace SharePointPnP.ProvisioningApp.WebJob
 
                     String spoTenant = rootSite.WebUrl;
 
-                    log.WriteLine($"Target SharePoint Online Tenant: {spoTenant}");
+                    await log.WriteLineAsync($"Target SharePoint Online Tenant: {spoTenant}");
 
                     // Configure telemetry properties
                     telemetryProperties.Add("SPOTenant", spoTenant);
 
                     // Retrieve the SPO Access Token
-                    var spoAccessToken = await ProvisioningAppManager.AccessTokenProvider.GetAccessTokenAsync(
-                        tokenId, rootSite.WebUrl,
-                        ConfigurationManager.AppSettings[$"{action.ActionType}:ClientId"],
-                        ConfigurationManager.AppSettings[$"{action.ActionType}:ClientSecret"],
-                        ConfigurationManager.AppSettings[$"{action.ActionType}:AppUrl"]);
-                    log.WriteLine($"Retrieved target SharePoint Online Access Token.");
+                    var spoAccessToken = await ProvisioningAppManager
+                                                .AccessTokenProvider
+                                                .GetAccessTokenAsync(
+                                                // .GetAppOnlyAccessTokenAsync(
+                                                    // tokenId,
+                                                    // rootSite.WebUrl,
+                                                    ConfigurationManager.AppSettings[$"{action.ActionType}:ClientId"],
+                                                    ConfigurationManager.AppSettings[$"{action.ActionType}:ClientSecret"],
+                                                    ConfigurationManager.AppSettings[$"{action.ActionType}:AppUrl"],
+                                                    null);
 
+                    await log.WriteLineAsync($"Retrieved target SharePoint Online Access Token.");
                     #endregion
 
                     // Connect to SPO, create and provision site
-                    AuthenticationManager authManager = new AuthenticationManager();
-                    using (ClientContext context = authManager.GetAzureADAccessTokenAuthenticatedContext(spoTenant, spoAccessToken))
+                    var authManager = new AuthenticationManager();
+                    using (var context = authManager.GetAzureADAccessTokenAuthenticatedContext(spoTenant, spoAccessToken))
                     {
                         // Telemetry and startup
                         var web = context.Web;
@@ -156,11 +167,13 @@ namespace SharePointPnP.ProvisioningApp.WebJob
                         // Save the current SPO Correlation ID
                         telemetryProperties.Add("SPOCorrelationId", context.TraceCorrelationId);
 
-                        log.WriteLine($"SharePoint Online Root Site Collection title: {web.Title}");
+                        await log.WriteLineAsync($"SharePoint Online Root Site Collection title: {web.Title}");
 
                         #region Store the main site URL in KeyVault
 
+                        // "public class SqlServerVaultService : ISecurityTokensService" was removed in commit "6157bdaedfe485590e2591b5f9ef639f8092c855" (Migrated from ADAL to MSAL + Syntex support)
                         // Store the main site URL in the vault
+                        /*
                         var vault = ProvisioningAppManager.SecurityTokensServiceProvider;
 
                         // Read any existing properties for the current tenantId
@@ -177,6 +190,7 @@ namespace SharePointPnP.ProvisioningApp.WebJob
 
                         // Add or Update the Key Vault accordingly
                         await vault.AddOrUpdateAsync(tokenId, properties);
+                        */
 
                         #endregion
 
@@ -231,13 +245,11 @@ namespace SharePointPnP.ProvisioningApp.WebJob
                                 mem.Position = 0;
 
                                 // Deserialize the stream into a provisioning hierarchy reading any 
-                                // dependecy with the Azure Blob Storage connector
+                                // dependency with the Azure Blob Storage connector
                                 var formatter = XMLPnPSchemaFormatter.GetSpecificFormatter(xml.Root.Name.NamespaceName);
                                 var templateLocalFolder = $"{blobContainerName}/{packageFileRelativeFolder}";
 
-                                var provider = new XMLAzureStorageTemplateProvider(
-                                    blobConnectionString,
-                                    templateLocalFolder);
+                                var provider = new OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml.XMLAzureStorageTemplateProvider(blobConnectionString, templateLocalFolder);
                                 formatter.Initialize(provider);
 
                                 // Get the full hierarchy
@@ -278,12 +290,18 @@ namespace SharePointPnP.ProvisioningApp.WebJob
                                 var tenantUrl = UrlUtilities.GetTenantAdministrationUrl(context.Url);
 
                                 // Retrieve the SPO Access Token
-                                var spoAdminAccessToken = await ProvisioningAppManager.AccessTokenProvider.GetAccessTokenAsync(
-                                    tokenId, tenantUrl,
-                                    ConfigurationManager.AppSettings[$"{action.ActionType}:ClientId"],
-                                    ConfigurationManager.AppSettings[$"{action.ActionType}:ClientSecret"],
-                                    ConfigurationManager.AppSettings[$"{action.ActionType}:AppUrl"]);
-                                log.WriteLine($"Retrieved target SharePoint Online Admin Center Access Token.");
+                                var spoAdminAccessToken = await ProvisioningAppManager
+                                                                .AccessTokenProvider
+                                                                .GetAccessTokenAsync(
+                                                                // .GetAppOnlyAccessTokenAsync(
+                                                                    // tokenId,
+                                                                    // tenantUrl,
+                                                                    ConfigurationManager.AppSettings[$"{action.ActionType}:ClientId"],
+                                                                    ConfigurationManager.AppSettings[$"{action.ActionType}:ClientSecret"],
+                                                                    ConfigurationManager.AppSettings[$"{action.ActionType}:AppUrl"],
+                                                                    null);
+
+                                await log.WriteLineAsync("Retrieved target SharePoint Online Admin Center Access Token.");
 
                                 using (var tenantContext = authManager.GetAzureADAccessTokenAuthenticatedContext(tenantUrl, spoAdminAccessToken))
                                 {
@@ -383,11 +401,16 @@ namespace SharePointPnP.ProvisioningApp.WebJob
                                             else
                                             {
                                                 // Try to get a fresh new Access Token
-                                                var token = await ProvisioningAppManager.AccessTokenProvider.GetAccessTokenAsync(
-                                                    tokenId, $"https://{r}",
-                                                    ConfigurationManager.AppSettings[$"{action.ActionType}:ClientId"],
-                                                    ConfigurationManager.AppSettings[$"{action.ActionType}:ClientSecret"],
-                                                    ConfigurationManager.AppSettings[$"{action.ActionType}:AppUrl"]);
+                                                var token = await ProvisioningAppManager
+                                                                    .AccessTokenProvider
+                                                                    .GetAccessTokenAsync(
+                                                                    // .GetAppOnlyAccessTokenAsync(
+                                                                        // tokenId,
+                                                                        // $"https://{r}",
+                                                                        ConfigurationManager.AppSettings[$"{action.ActionType}:ClientId"],
+                                                                        ConfigurationManager.AppSettings[$"{action.ActionType}:ClientSecret"],
+                                                                        ConfigurationManager.AppSettings[$"{action.ActionType}:AppUrl"],
+                                                                        null);
 
                                                 accessTokens.Add(r, token);
 
@@ -468,12 +491,14 @@ namespace SharePointPnP.ProvisioningApp.WebJob
                                         // Notify user about the provisioning outcome
                                         if (!String.IsNullOrEmpty(action.NotificationEmail))
                                         {
-                                            var appOnlyAccessToken = await ProvisioningAppManager.AccessTokenProvider.GetAppOnlyAccessTokenAsync(
-                                                "https://graph.microsoft.com/",
-                                                ConfigurationManager.AppSettings["OfficeDevPnP:TenantId"],
-                                                ConfigurationManager.AppSettings["OfficeDevPnP:ClientId"],
-                                                ConfigurationManager.AppSettings["OfficeDevPnP:ClientSecret"],
-                                                ConfigurationManager.AppSettings["OfficeDevPnP:AppUrl"]);
+                                            var appOnlyAccessToken = await ProvisioningAppManager
+                                                                            .AccessTokenProvider
+                                                                            .GetAppOnlyAccessTokenAsync(
+                                                                                "https://graph.microsoft.com/",
+                                                                                ConfigurationManager.AppSettings["OfficeDevPnP:TenantId"],
+                                                                                ConfigurationManager.AppSettings["OfficeDevPnP:ClientId"],
+                                                                                ConfigurationManager.AppSettings["OfficeDevPnP:ClientSecret"],
+                                                                                ConfigurationManager.AppSettings["OfficeDevPnP:AppUrl"]);
 
                                             MailHandler.SendMailNotification(
                                                 "ProvisioningCompleted",
@@ -565,12 +590,14 @@ namespace SharePointPnP.ProvisioningApp.WebJob
 
                 if (!String.IsNullOrEmpty(action.NotificationEmail))
                 {
-                    var appOnlyAccessToken = await ProvisioningAppManager.AccessTokenProvider.GetAppOnlyAccessTokenAsync(
-                        "https://graph.microsoft.com/",
-                        ConfigurationManager.AppSettings["OfficeDevPnP:TenantId"],
-                        ConfigurationManager.AppSettings["OfficeDevPnP:ClientId"],
-                        ConfigurationManager.AppSettings["OfficeDevPnP:ClientSecret"],
-                        ConfigurationManager.AppSettings["OfficeDevPnP:AppUrl"]);
+                    var appOnlyAccessToken = await ProvisioningAppManager
+                                                    .AccessTokenProvider
+                                                    .GetAppOnlyAccessTokenAsync(
+                                                        "https://graph.microsoft.com/",
+                                                        ConfigurationManager.AppSettings["OfficeDevPnP:TenantId"],
+                                                        ConfigurationManager.AppSettings["OfficeDevPnP:ClientId"],
+                                                        ConfigurationManager.AppSettings["OfficeDevPnP:ClientSecret"],
+                                                        ConfigurationManager.AppSettings["OfficeDevPnP:AppUrl"]);
 
                     // Notify user about the provisioning outcome
                     MailHandler.SendMailNotification(
